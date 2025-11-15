@@ -384,8 +384,8 @@ class ModelRun(object):
 
     def _check_starttime(self):
         try:
-            roms_ini = netCDF4.num2date(netCDF4.Dataset(self._params.RUNPATH+"/ocean_ini.nc").variables['ocean_time'][:],
-                                        netCDF4.Dataset(self._params.RUNPATH+"/ocean_ini.nc").variables['ocean_time'].units)
+            roms_ini = netCDF4.num2date(netCDF4.Dataset("/global/homes/b/bundzis/Projects/Beaufort_ROMS_2020_dvd_myroms_ice/Include/initial_conds_beaufort_shelf_sea_ice_dec7_2019_20vert_002.nc").variables['ocean_time'][:],
+                                        netCDF4.Dataset("/global/homes/b/bundzis/Projects/Beaufort_ROMS_2020_dvd_myroms_ice/Include/initial_conds_beaufort_shelf_sea_ice_dec7_2019_20vert_002.nc").variables['ocean_time'].units)
         except:
             roms_ini = netCDF4.num2date(netCDF4.Dataset(self._params.RUNPATH+"/ocean_ini.nc").variables['ocean_time'],
                                         netCDF4.Dataset(self._params.RUNPATH+"/ocean_ini.nc").variables['ocean_time'].units)

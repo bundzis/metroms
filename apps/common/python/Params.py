@@ -23,7 +23,8 @@ class Params(object):
         self.CICECPU=cicecpu
         self.FCLEN=(end_date-start_date).total_seconds()
         self.NRREC=nrrec
-        self.TIMEREF=datetime(1970,01,01,00)
+        #self.TIMEREF=datetime(1970,01,01,00) # OG
+        self.TIMEREF=datetime(2000,1,1,00) # BCU
         self.RESTART=restart
         if app=='arctic-20km':
             ########################################################################
@@ -42,7 +43,8 @@ class Params(object):
             self.COUPLINGTIME_I2O=3600.0
             #self.ROMSINIFILE=self.RUNPATH+"/"+INIFILE
             # Find restart-time of CICE:
-            cice_start_step = (start_date-datetime(start_date.year,01,01,00)).total_seconds()/self.CICEDELTAT
+            #cice_start_step = (start_date-datetime(start_date.year,01,01,00)).total_seconds()/self.CICEDELTAT # OG
+            cice_start_step = (start_date-datetime(start_date.year,1,1,00)).total_seconds()/self.CICEDELTAT #BCU
             if restart == True:
                 f = open(self.CICERUNDIR+'/restart/ice.restart_file', 'r')
                 cice_restartfile = f.readline().strip()
@@ -101,6 +103,113 @@ class Params(object):
             ['RIVERFILE',GlobalParams.COMMONPATH+"/rivers/newA20_rivers_mitya.nc"],
             ['FORCEFILES',"3"], # The files should be specified here as well
             #['ROMS/External/coupling.dat', self.RUNPATH + "/coupling.dat"],
+            ['COUPLINGTIMEI2O',str(self.COUPLINGTIME_I2O)],
+            ['ROMSINFILE', self.ROMSINFILE ],
+            ['CICEINFILE', self.CICEINFILE ],
+            ['NUMROMSCORES',str(int(self.XCPU)*int(self.YCPU))],
+            ['NUMCICECORES',str(int(self.CICECPU))]
+            ]
+            ########################################################################
+            # List of CICE keywords:
+            ########################################################################
+            #if (cice_rst_day == start_date.day):
+            # if (restart == True):
+            #     cicerst_truefalse = ".true."
+            # else:
+            #     cicerst_truefalse = ".false."
+            self.CICEKEYWORDLIST=[
+            ['CICEYEARSTART',start_date.strftime("%Y")],
+            ['CICESTARTSTEP',str(int(cice_start_step))],  #number of hours after 00:00 Jan 1st
+            ['CICEDELTAT',str(self.CICEDELTAT)],
+            ['CICENPT',str(int((self.FCLEN/self.CICEDELTAT)-(cice_rst_time - cice_start_step)))],   # minus diff restart og start_date
+            ['CICERUNTYPE',"'continue'"],
+            ['CICEIC',"'default'"],
+            ['CICEREST',".true."],
+            ['CICERSTTIME',cicerst_truefalse],
+            #['<cicedir>',GlobalParams.COMMONPATH + "/../../../tmproms/cice"]
+            ]
+            ########################################################################
+            ########################################################################
+            ########################################################################
+            ########################################################################
+        elif app=='beaufort_roms_cice':
+            ########################################################################
+            # Name of roms.in keyword-file:
+            ########################################################################
+            self.RUNPATH=GlobalParams.RUNDIR
+            self.ROMSINFILE=self.RUNPATH+"/Include/roms_cice_ocean_beaufort.in"
+            #self.CICEKEYWORDFILE=self.RUNPATH + "/ice_in_keyword"
+            #self.CICEINFILE=GlobalParams.CICERUNDIR + "/ice_in"
+            self.CICERUNDIR=self.RUNPATH+'/cice/rundir'
+            self.CICEINFILE=self.RUNPATH + "/ice_in"
+            self.CICEKEYWORDFILE=self.CICERUNDIR + "/ice_in"
+            self.FELT_CLMFILE=self.RUNPATH+"/FOAM.felt"
+            self.DELTAT=1200 
+            self.CICEDELTAT=3600.0
+            self.COUPLINGTIME_I2O=3600.0
+            #self.ROMSINIFILE=self.RUNPATH+"/"+INIFILE
+            # Find restart-time of CICE:
+            #cice_start_step = (start_date-datetime(start_date.year,01,01,00)).total_seconds()/self.CICEDELTAT # OG
+            cice_start_step = (start_date-datetime(start_date.year,1,1,00)).total_seconds()/self.CICEDELTAT #BCU
+            if restart == True:
+                f = open(self.CICERUNDIR+'/restart/ice.restart_file', 'r')
+                cice_restartfile = f.readline().strip()
+                cice_rst_time = netCDF4.Dataset(cice_restartfile).istep1
+                #cice_rst_day = netCDF4.Dataset(cice_restartfile).mday
+                cicerst_truefalse = ".true."
+            else:
+                cice_rst_time = cice_start_step
+                #cice_rst_day = start_date.day
+                cicerst_truefalse = ".false."
+            ########################################################################
+            # List of keywords:
+            ########################################################################
+            self.KEYWORDLIST=[
+            ['APPTITLE',"ROMS 3.9 Coupled ROMS-CICE"],
+            ['MYAPPCPPNAME',"BEAUFORT_ROMS_CICE"],
+            ['VARFILE',"/pscratch/sd/b/bundzis/Beaufort_ROMS_CICE_test_02_scratch/roms_src/ROMS/External/varinfo.dat"],
+            ['XPOINTS',"606"],  #Could read from grd-file?
+            ['YPOINTS',"204"],  #Could read from grd-file?
+            ['NLEVELS',"20"],  #Could read from grd-file?
+            ['GRDTHETAS',"1.0d0"],
+            ['GRDTHETAB',"3.0d0"],
+            ['GRDTCLINE',"5.0d0"],            
+            ['_TNU2_',"2.5d0"],
+            ['_TNU4_',"2*0d0"],
+            ['_VISC2_',"5.0d0"],
+            ['_VISC4_',"0.0d0"],
+            ['XCPU',str(self.XCPU)],
+            ['YCPU',str(self.YCPU)],
+            ['TSTEPS',str(self.FCLEN/self.DELTAT)],
+            ['DELTAT',str(self.DELTAT)],
+            ['RATIO',"20"], #['RATIO',"30"],
+            ['IRESTART',str(self.NRREC)],
+            ['RSTSTEP',str(30*24*3600/int(self.DELTAT))],
+            ['STASTEP',str(24*3600/int(self.DELTAT))],
+            ['INFOSTEP', str(1*3600/int(self.DELTAT))],
+            ['HISSTEPP', str(1*3600/int(self.DELTAT))],
+            ['DEFHISSTEP',str(30*24*3600/int(self.DELTAT))],  #if 0; all output in one his-file
+            ['AVGSTEPP',str(1*24*3600/int(self.DELTAT))],
+            ['STARTAVG',"1"],
+            ['DEFAVGSTEP',str(30*24*3600/int(self.DELTAT))],  #if 0; all output in one avg-file
+            ['STARTTIME',str((start_date-self.TIMEREF).total_seconds()/86400)],
+            ['START_DATE',str((start_date-self.TIMEREF).total_seconds()/86400)],
+            ['TIDEREF',str((start_date-self.TIMEREF).total_seconds()/86400)],
+            ['TIMEREF',self.TIMEREF.strftime("%Y%m%d.00")],
+            ['V_TRANS',"2"],
+            ['V_STRETCH',"2"],
+            ['_TNUDG_',"15.0d0 15.0d0"],
+            ['OBCFAKTOR',"1.0"],
+            ['NUDGZONEWIDTH',"10"],
+            ['GRDFILE',"/global/homes/b/bundzis/Projects/Beaufort_ROMS_2020_test_nosed/Include/KakAKgrd_shelf_big010_smooth006_thin_sponge.nc"],
+            ['RUNDIR',self.RUNPATH],
+            ['_CLMNAME_',"ocean_clm.nc"],
+            ['_BRYNAME_',"ocean_bry.nc"],
+            ['TIDEDIR',self.RUNPATH],
+            ['ATMDIR',"atmo.nc"],
+            ['RIVERFILE',"/global/homes/b/bundzis/Projects/Beaufort_ROMS_2020_dvd_myroms_ice/Include/river_forcing_file_beaufort_shelf_10rivs_blaskey_data_2019_2024_clm_20vert_001_short.nc"],
+            ['FORCEFILES',"3"], # The files should be specified here as well
+            ['ROMS/External/coupling.dat',"/pscratch/sd/b/bundzis/Beaufort_ROMS_CICE_test_02_scratch/coupling.dat"],
             ['COUPLINGTIMEI2O',str(self.COUPLINGTIME_I2O)],
             ['ROMSINFILE', self.ROMSINFILE ],
             ['CICEINFILE', self.CICEINFILE ],
