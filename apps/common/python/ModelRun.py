@@ -71,7 +71,7 @@ class ModelRun(object):
             self._check_starttime()
         self._replace_keywords_roms_in()
         print("running roms for this timespan:")
-        print(self._params.START_DATE, self._params.END_DATE)
+        #print(self._params.START_DATE, self._params.END_DATE)
         print(self._params.FCLEN)
         result = self._run(runoption,debugoption,architecture)
         if result == 0:
@@ -135,9 +135,11 @@ class ModelRun(object):
             result (int) : 0 if all good, some other value if error with run or user choices
         """
         if debugoption==Constants.DEBUG:
-            executable="oceanG"
+            #executable="oceanG"
+            executable=os.getcwd()+"/romsG"
         else:
-            executable="oceanM"
+            #executable="oceanM"
+            executable=os.getcwd()+"/romsM"
 
         if architecture==Constants.NEBULA or architecture==Constants.STRATUS:
             print('running on NSC HPC:')
@@ -172,6 +174,15 @@ class ModelRun(object):
             else:
                 # B: mpirun -mca btl self -mca pml ucx -x UCX_NET_DEVICES=mlx5_2:1 -x UCX_TLS=ib,shm,rc_x
                 result = os.system("mpirun -mca btl self -mca pml ucx -x UCX_NET_DEVICES=mlx5_2:1 -x UCX_TLS=ib,shm,rc_x " + executable + " " + infile)
+        elif architecture==Constants.PERLMUTTER:
+            print('running on PERLMUTTER:')
+            if debugoption==Constants.PROFILE:
+                print("Profiling not working yet on "+architecture)
+                result = 1
+            else:
+                os.environ["MPI_BUFS_PER_PROC"] = str(128)
+                result=os.system("mpiexec_mpt -np "+str(ncpus)+" "+executable+" "+infile)
+                #result = os.system("srun " + os.path.join(self._params.RUNPATH, executable) + " " + infile)
         elif architecture==Constants.FRAM:
             print('running on FRAM:')
             if debugoption==Constants.PROFILE:
@@ -251,6 +262,16 @@ class ModelRun(object):
              architecture==Constants.MET_PPI_OPATH or architecture==Constants.MET_PPI_R8IBX or \
              architecture==Constants.MET_PPI_R8IBA or architecture==Constants.MET_PPI_R8IBB or \
              architecture==Constants.FRAM:
+            if runoption==Constants.MPI:
+                result = self._execute_roms_mpi((int(self._params.XCPU)*int(self._params.YCPU))+
+                                       int(self._params.CICECPU),
+                                       self._params.ROMSINFILE,debugoption,architecture)
+            elif runoption==Constants.DRY:
+                result = 0
+            else:
+                print("No valid runoption!")
+                result = 1
+        elif architecture==Constants.PERLMUTTER:
             if runoption==Constants.MPI:
                 result = self._execute_roms_mpi((int(self._params.XCPU)*int(self._params.YCPU))+
                                        int(self._params.CICECPU),

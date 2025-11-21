@@ -31,6 +31,7 @@ class GlobalParams(object):
             sys.exit(1)
 
         METROMSDIR=os.environ.get('METROMS_BASEDIR','/global/homes/b/bundzis/Repos/metroms')
+        CICERUNDIR=os.environ.get('CICERUNDIR', '/pscratch/sd/b/bundzis/Beaufort_ROMS_CICE_test_02_scratch/cice/rundir')
 
         tmpdir=os.environ.get('METROMS_TMPDIR','/pscratch/sd/b/bundzis/Beaufort_ROMS_CICE_test_02_scratch')
         RUNDIR=tmpdir

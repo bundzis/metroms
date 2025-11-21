@@ -139,7 +139,7 @@ class Params(object):
             self.RUNPATH=GlobalParams.RUNDIR
             self.ROMSINFILE=self.RUNPATH+"/Include/roms_cice_ocean_beaufort.in"
             #self.CICEKEYWORDFILE=self.RUNPATH + "/ice_in_keyword"
-            #self.CICEINFILE=GlobalParams.CICERUNDIR + "/ice_in"
+            self.CICEINFILE=GlobalParams.CICERUNDIR + "/ice_in"
             self.CICERUNDIR=self.RUNPATH+'/cice/rundir'
             self.CICEINFILE=self.RUNPATH + "/ice_in"
             self.CICEKEYWORDFILE=self.CICERUNDIR + "/ice_in"
@@ -199,7 +199,7 @@ class Params(object):
             ['V_TRANS',"2"],
             ['V_STRETCH',"2"],
             ['_TNUDG_',"15.0d0 15.0d0"],
-            ['OBCFAKTOR',"1.0"],
+            ['OBCFAKTOR',"4.0"],
             ['NUDGZONEWIDTH',"10"],
             ['GRDFILE',"/global/homes/b/bundzis/Projects/Beaufort_ROMS_2020_test_nosed/Include/KakAKgrd_shelf_big010_smooth006_thin_sponge.nc"],
             ['RUNDIR',self.RUNPATH],
