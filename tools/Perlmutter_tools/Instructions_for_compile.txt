@@ -1,0 +1,104 @@
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~ Instructions for Compiling ROMS-CICE on Perlmutter ~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This document includes instructions for compiling ROMS-CICE on Perlmutter
+from the MetROMS Github repo (https://github.com/metno/metroms/tree/master).
+
+The following files are needed:
+(a) compile_roms_cice_perlmutter.sh
+   This script is the main bash script that needs to be edited and ran to compile ROMS-CICE on Perlmutter once the |**USER INPUT**| sections have been updated to match your directories and choices (see script for more details and instructions).
+
+(b) fix_long_fflags_rule.mk
+   This file is used in the build to add in a section to the ROMS makefile to properly build mod_strings.F without throwing an error about the Fortran flags being too long on one line. See potential pitfalls below for more context. 
+
+(c) ice_in 
+   This is the input file with setup things for CICE.
+
+(d) coupling.dat 
+   This file contains the variables that will be shared between ROMS and CICE. There is a section at the bottom of roms.in where you can specify these variables. I think to pass more variables, simply add them into coupling.dat and then maaaaybe it will work...
+
+(e) Linux-gfortran.mk
+   This file contains info on building ROMS on Perlmutter using gfortran (Fortran and C compiler flags, info on HDF5, NetCDF, MPI, etc. libraries.
+
+(f) Macros.Linux.perlmutter
+   This contains Fortran and C flags for the CICE build, as well as paths to the NetCDF directories. This has been copied and edited from the MetROMS repos Macros.Linux.* examples to be compatible with Perlmutter. 
+
+(g) roms.h
+   ROMS header file, current one in this directory is beaufort_roms_cice.h
+
+(h) iceh_ic.nc
+   Initial conditions for the CICE model. There are neat tools in metroms/tools for how to convert ROMS initial conditions files to CICE initial conditions. 
+
+(i) cice_grid.nc
+   The grid for the CICE model. There are neat tools in metroms/tools for how to make a CICE grid from a ROMS grid.
+
+(j) cice_kmt.nc
+   The kmt file for the CICE model. There are neat tools in metroms/tools for how to make a CICE kmt file from a ROMS grid. 
+
+(k) roms.in
+   The roms.in file with all of the things for the ROMS model. This also has a section at the end for choices related to coupling ROMS and CICE (see after the Glossary). In this directory, this file is currently called roms_cice_ocean_beaufort.in. 
+
+
+These instructions assume the user already has the following things:
+- ROMS header file
+- All ROMS input files (but these can change at run time since they aren't needed for the build I don't think...)
+- CICE initial conditions file
+- CICE grid file
+- CICE kmt file
+- ice_in (CICE file specifying things for CICE model)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Instructions:
+1. Clone the MetROMS Github repo somewhere on your account on Perlmutter.
+
+2. Make a Project directory where you will put everything for the ROMS-CICE implementation (ROMS header file, CICE and ROMS grids, etc.). Note that the MCT, CICE, and ROMS codes will be unzipped into this directory.
+
+3. Copy the following files into your Project directory:
+	- compile_roms_cice_perlmutter.sh
+	- fix_long_fflags_rule.mk
+	- ice_in 
+
+4. Create a directory called "Include" in your Project directory and copy the following files into it:
+	- iceh_ic.nc
+	- new_cice.grid.nc
+	- new_cice.kmt.nc
+	- roms.in
+	- roms.h 
+
+5. The other files (listed below) will need to be somewhere on Perlmutter so that compile_roms_cice_perlmutter.sh can copy them from a user-specified location to where the build scrips expect them. There are details about where to specify that in compile_roms_cice_perlmutter.sh.
+	- Linux-gfortran.mk
+	- Macros.Linux.perlmutter
+	- coupling.dat 
+
+6. Once all of this is in place, go to your Project directory and run compile_roms_cice_perlmutter.sh by tying:
+
+	./compile_roms_cice_perlmutter.sh
+
+Note that this build assumes you have 4 cores/proccessors available for compiling but if that is not the case, change the number 4 in the two lines that have './build_roms.sh -j 4 -noclean >$compile_001.out' in compile_roms_cice_perlmutter.sh to be however many cores you have. There might be another place in build_cice.sh where this is set so be mindful of that. 
+
+7. Assuming compile_roms_cice_perlmutter.sh runs without crashing, you should have the following things in your Project directory after the build:
+	- build_mct.sh
+	- MCT directory with all the MCT things 
+	- build_cice.sh
+	- cice folder with lots of CICE things (specifically check cice/rundir/compile/ for a libcice.a file)
+	- build_roms.sh
+	- roms_src directory with the unpacked ROMS source code 
+	- build directory with the built ROMS source code 
+	- romsM
+
+
+
+Potential pitfalls:
+- Quadruple check all file paths and names/user inputs specified in compile_roms_cice_perlmutter.sh
+
+- This is currently setup to use gfortran and cray systems on Perlmutter but the specific modules loaded will need to be changed for other computers/compilers. Note if switching to ifort, there are flags/commands/things called in the CICE fortran files that are more compatible with gfortran that will need to be changed somehow. Therefore I recommend using gfortran but there is probably a way to get ifort to work.
+
+- There is a goofy workaround to get mod_strings.F to build correctly in the build_roms.sh section that involves two versions of the makefile. This is definitely terrible coding practice but works for now....however this could be solved with adding a Fortran flag (-ffree-line-length-none) to the makefile for the mod_strings.F build but I struggled to get this to work...so leaving the clunky version for now but there is definitely a simpler fix if you are better at computers. Update that all of a suddent this fix mayb not be needed but it is still included in case it is.
+
+- Unfortunately this was built without the option for parallel input/output (PIO) turned on and could absolutely be edited to allow that...however I was not successful in figuring out how to build with the parallel IO modules for Perlmutter when trying to run ROMS alone with PIO so I did not try for this build.
+
+- Absolutely feel free to contact Brianna (Brianna.undzis@colorado.edu | bundzis on Github) if you have any issues/trouble/questions! 
