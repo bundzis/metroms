@@ -1,0 +1,63 @@
+#==============================================================================
+# Makefile macros for "perlmutter," USA DOE HPC
+#==============================================================================
+
+# OG
+#INCLDIR    := -I. -I/usr/include
+#SLIBS      := -L/usr/lib
+# from Macros.Linux.nebula2
+INCLDIR    := -I$(MCT_INCDIR)
+SLIBS      := -L$(MCT_LIBDIR) -lmct -lmpeu
+ULIBS      := 
+CPP        := /usr/bin/cpp
+CPPFLAGS   := -P -traditional
+CPPDEFS    := -DLINUX
+CFLAGS     := -c -O2
+ifeq ($(COMMDIR), mpi)
+   FC         := mpif90
+else
+   FC         := gfortran
+endif
+FIXEDFLAGS := -132
+FREEFLAGS  := 
+#FFLAGS     :=  -O0 -w -g -Wall -finit-real=nan -ffree-line-length-none -fconvert=big-endian -pedantic -std=gnu
+#FFLAGS     :=  -O0 -w -g -finit-real=nan -ffree-line-length-none -fconvert=big-endian -pedantic -Wunused
+FFLAGS     :=  -O2 -ffree-line-length-none -fconvert=big-endian -finit-real=nan -fallow-argument-mismatch 
+#FFLAGS     := -r8 -i4 -O2 -align all -w -ftz -convert big_endian -assume byterecl 
+#FFLAGS     := -r8 -i4  -align all -w -ftz -convert big_endian -assume byterecl -g
+#FFLAGS     := -r8 -i4 -align all -w -ftz -convert big_endian -assume byterecl -fpe0 -CB -traceback 
+#FFLAGS     := -r8 -i4 -align all -w -ftz -convert big_endian -assume byterecl -fpe0 -CB -g
+MOD_SUFFIX := mod
+LD         := $(FC)
+LDFLAGS    := $(FFLAGS) -v
+
+#    CPPDEFS :=  $(CPPDEFS) -DNXGLOB=$(NXGLOB) -DNYGLOB=$(NYGLOB) \
+#                -DBLCKX=$(BLCKX) -DBLCKY=$(BLCKY) -DMXBLCKS=$(MXBLCKS) \
+#                -DNICELYR=$(NICELYR) -DNSNWLYR=$(NSNWLYR) -DNICECAT=$(NICECAT) \
+#                -DTRAGE=$(TRAGE) -DTRFY=$(TRFY) -DTRLVL=$(TRLVL) -DTRPND=$(TRPND) \
+#                -DTRBRI=$(TRBRI) -DNTRAERO=$(NTRAERO) -DNBGCLYR=$(NBGCLYR) \
+#                -DTRBGCS=$(TRBGCS) -DNUMIN=$(NUMIN) -DNUMAX=$(NUMAX)
+   CPPDEFS :=  $(CPPDEFS) -DNXGLOB=$(NXGLOB) -DNYGLOB=$(NYGLOB) \
+                -DBLCKX=$(BLCKX) -DBLCKY=$(BLCKY) -DMXBLCKS=$(MXBLCKS) \
+                -DNICELYR=$(NICELYR) -DNSNWLYR=$(NSNWLYR) -DNICECAT=$(NICECAT) \
+                -DTRAGE=$(TRAGE) -DTRFY=$(TRFY) -DTRLVL=$(TRLVL) -DTRPND=$(TRPND) \
+                -DTRBRI=$(TRBRI) -DNTRAERO=$(NTRAERO) -DNBGCLYR=$(NBGCLYR) \
+                -DTRBGCS=$(TRBGCS) -DNUMIN=$(NUMIN) -DNUMAX=$(NUMAX)\
+	        -DROMSCOUPLED
+#   CPPDEFS :=  $(CPPDEFS) -DAOMIP
+
+ifeq ($(DITTO), yes)
+   CPPDEFS :=  $(CPPDEFS) -DREPRODUCIBLE
+endif
+
+
+# BCU
+ifeq ($(IO_TYPE), netcdf)
+   CPPDEFS :=  $(CPPDEFS) -Dncdf
+   # The Cray compiler wrappers already include correct include & lib paths.
+   # Explicitly add the NetCDF module include path for safety:
+   INCLDIR := $(INCLDIR) -I$(NETCDF_DIR)/include
+   SLIBS   := $(SLIBS) -L$(NETCDF_DIR)/lib -lnetcdff -lnetcdf
+endif
+
+
